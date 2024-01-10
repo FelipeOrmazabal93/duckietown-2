@@ -25,24 +25,30 @@ def PIDController(
         e_int:      current integral error (automatically becomes prev_int_y at next iteration).
     """
 
-    # Read PID gains from file
-    script_dir = os.path.dirname(__file__)
-    file_path = script_dir + "/GAINS.yaml"
 
+# Read PID gains from file
+    script_dir = os.path.dirname(__file__)
+    file_path = os.path.join(script_dir, "GAINS.yaml")
     with open(file_path) as f:
         gains = yaml.full_load(f)
-        f.close()
-    
+        
     kp = gains['kp']
     kd = gains['kd']
     ki = gains['ki']
 
-    # ------------- DEFINE YOUR PID FUNCTION BELOW ---------
+# Calculate the lateral tracking error
+    e_y = y_ref - y_hat
+# Calculate the integral error term 
+    e_int_y = prev_int_y + e_y * delta_t
+# Implement anti-windup for the integral term
+    e_int_y = max(min(e_int_y, 2.0), -2.0)
+    e_der = (e_y - prev_e_y)/delta_t
 
-    # These are random values, replace with your implementation of a PID controller in here
-    omega = np.random.uniform(-8.0, 8.0)
-    e = np.random.random()
-    e_int = np.random.random()
-    # ---
-    
-    return v_0, omega, e, e_int
+    omega = kp*e_y + ki*e_int_y+kd*e_der
+    return v_0, omega, e_y, e_int_y
+
+
+
+
+
+
